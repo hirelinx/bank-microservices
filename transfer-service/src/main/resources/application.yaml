@@ -1,0 +1,53 @@
+server:
+  port: 8230
+
+spring:
+  application:
+    name: transfer-service
+
+  config:
+    import: "optional:consul:"
+
+  cloud:
+    consul:
+      host: localhost          # Адрес Consul (по умолчанию localhost)
+      port: 8500               # Порт Consul (8500 по умолчанию)
+      config:
+        enabled: true            # Включаем Consul Config для внешней конфигурации
+        defaultContext: application  # Контекст по умолчанию
+        prefixes:
+          - config
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/bank-realm
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: transfer-service
+            client-secret: JcsVjVYLeY2ZgDMQb63xxQDnL92pxE8A
+            authorization-grant-type: client_credentials
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8180/realms/bank-realm
+
+
+bank:
+  notification:
+    base-url: http://notification-service:8220
+  account:
+    base-url: http://account-service:8200
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    root: INFO

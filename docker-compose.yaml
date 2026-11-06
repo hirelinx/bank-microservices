@@ -1,0 +1,80 @@
+services:
+  consul:
+    image: hashicorp/consul:1.15 # Рекомендуется использовать конкретную версию вместо latest
+    container_name: consul-server
+    restart: always
+    volumes:
+      - consul_data:/consul/data
+      - ./consul:/consul/config
+    ports:
+      - "8500:8500"       # Web UI и HTTP API
+      - "8600:8600/tcp"   # DNS-сервер (TCP)
+      - "8600:8600/udp"   # DNS-сервер (UDP)
+      - "8300:8300"       # Server RPC (для связи между агентами)
+      - "8301:8301/tcp"   # Serf LAN (Gossip протокол, TCP)
+      - "8301:8301/udp"   # Serf LAN (Gossip протокол, UDP)
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    command: >
+      consul agent -server 
+      -bootstrap-expect=1 
+      -ui 
+      -client=0.0.0.0 
+      -node=consul-server-01 
+      -datacenter=dc1 
+      -data-dir=/consul/data 
+      -config-dir=/consul/config
+
+  consul-kv-initializer:
+    image: hashicorp/consul:1.15
+    container_name: consul-kv-init
+    depends_on:
+      - consul
+    volumes:
+      - ./consul/kv/init.json:/tmp/consul_kv.json:ro
+    entrypoint: [ "sh", "-c" ]
+    command: >
+      "
+      echo 'Waiting for Consul to be ready...' &&
+      while ! consul kv put -http-addr=http://consul-server:8500 test_connection success >/dev/null 2>&1; do sleep 1; done &&
+      echo 'Consul is up! Importing Key-Value pairs...' &&
+      consul kv import -http-addr=http://consul-server:8500 @/tmp/consul_kv.json &&
+      echo 'KV import completed successfully!'"
+
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0
+    container_name: keycloak
+    restart: always
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-db:5432/postgres
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true" # Обязательно для работы health-check url (/health/ready)
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    ports:
+      - "8180:8080"
+    command: start-dev
+    depends_on:
+      - postgres-db
+
+volumes:
+  consul_data:
+  postgres_data:
+  keycloak_data:
