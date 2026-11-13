@@ -18,6 +18,23 @@ spring:
         prefixes:
           - config
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=account
+    username: postgres
+    password: password
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: account
+
+  flyway:
+    schemas: account
+    default-schema: account
+
   security:
     oauth2:
       resourceserver:

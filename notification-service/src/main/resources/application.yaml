@@ -19,11 +19,28 @@ spring:
         prefixes:
           - config
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=notification
+    username: postgres
+    password: password
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: notification
+
+  flyway:
+    schemas: notification
+    default-schema: notification
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/bank-realm
+          issuer-uri: http://localhost:8180/realms/bank-realm
 
 management:
   endpoints:
@@ -31,3 +48,6 @@ management:
       exposure:
         include: "*"
 
+logging:
+  level:
+    root: INFO
