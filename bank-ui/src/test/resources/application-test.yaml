@@ -1,0 +1,21 @@
+bank:
+  keycloak:
+    public-url: http://localhost:8180
+    internal-url: http://localhost:8180
+    realm: bank-realm
+  services:
+    gateway-url: http://bank-gateway
+  ping:
+    max-attempts: 1
+
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            authorization-uri: ${bank.keycloak.public-url}/realms/bank-realm/protocol/openid-connect/auth
+            token-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/token
+            jwk-set-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/certs
+            user-info-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/userinfo
+            user-name-attribute: preferred_username
