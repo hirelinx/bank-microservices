@@ -1,0 +1,25 @@
+description: Transfer переводит деньги между счетами одной транзакцией
+name: transfer
+request:
+  method: POST
+  url: /account/internal/transfer
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer service-token
+  body:
+    fromLogin: ivanov
+    toLogin: petrov
+    amount: 100
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    fromLogin: ivanov
+    fromBalance: 900.00
+    toLogin: petrov
+    toName: Петров Петр

@@ -13,7 +13,7 @@ import org.springframework.web.client.RestClient;
 
 @Configuration
 public class RestClientConfig {
-    @Value("${bank.gateway.base-url}")
+    @Value("${bank.services.gateway-url}")
     private String baseUrl;
 
     @Bean

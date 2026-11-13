@@ -1,0 +1,21 @@
+description: Cash пополняет счёт пользователя с сервисным токеном
+name: deposit
+request:
+  method: POST
+  url: /account/internal/ivanov/deposit
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer service-token
+  body:
+    amount: 100
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    login: ivanov
+    balance: 1100.00

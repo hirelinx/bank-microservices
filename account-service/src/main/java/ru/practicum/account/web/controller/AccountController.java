@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.account.client.NotificationClient;
 import ru.practicum.account.service.AccountService;
 import ru.practicum.account.web.dto.AccountDto;
 import ru.practicum.account.web.dto.AccountShortDto;
@@ -28,7 +27,6 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class AccountController {
     private final AccountService accountService;
-    private final NotificationClient notificationClient;
 
     @GetMapping("/me")
     public AccountDto getCurrent(JwtAuthenticationToken authentication) {
@@ -38,11 +36,8 @@ public class AccountController {
     @PutMapping("/me")
     public AccountDto updateCurrent(JwtAuthenticationToken authentication,
                                     @Valid @RequestBody UpdateAccountRequest request) {
-        String login = authentication.getName();
-        accountService.getOrCreate(login, fullName(authentication.getToken()));
-        AccountDto updated = accountService.update(login, request.name(), request.birthdate());
-        notificationClient.notify(login, "Данные аккаунта обновлены");
-        return updated;
+        return accountService.update(authentication.getName(), fullName(authentication.getToken()),
+                request.name(), request.birthdate());
     }
 
     @GetMapping("/others")

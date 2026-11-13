@@ -18,9 +18,9 @@ import org.springframework.web.client.RestClient;
 public class RestClientConfig {
     private static final String REGISTRATION_ID = "keycloak";
 
-    @Value("${bank.notification.base-url}")
+    @Value("${bank.services.notification-url}")
     private String notificationBaseUrl;
-    @Value("${bank.account.base-url}")
+    @Value("${bank.services.account-url}")
     private String accountBaseUrl;
 
     @Value("${spring.application.name}")

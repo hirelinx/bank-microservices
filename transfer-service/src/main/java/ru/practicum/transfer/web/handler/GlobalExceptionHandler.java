@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.transfer.exception.RemoteServiceException;
+import ru.practicum.transfer.exception.SelfTransferException;
 
 import java.util.List;
 
@@ -29,6 +30,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleNotReadable(HttpMessageNotReadableException e) {
         return problem(HttpStatus.BAD_REQUEST, List.of("Некорректный формат запроса"));
+    }
+
+    @ExceptionHandler(SelfTransferException.class)
+    public ProblemDetail handleSelfTransfer(SelfTransferException e) {
+        return problem(HttpStatus.BAD_REQUEST, List.of(e.getMessage()));
     }
 
     @ExceptionHandler(RemoteServiceException.class)

@@ -1,19 +1,22 @@
 package ru.practicum.bankui.security.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
+import ru.practicum.bankui.security.logout.KeycloakLogoutSuccessHandler;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   ClientRegistrationRepository clientRegistrationRepository) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            @Value("${bank.keycloak.public-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/logout") String endSessionUri,
+            @Value("${spring.security.oauth2.client.registration.keycloak.client-id}") String clientId
+    ) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**", "/css/**").permitAll()
@@ -21,18 +24,9 @@ public class SecurityConfig {
                 )
                 .oauth2Login(Customizer.withDefaults())
                 .logout(logout -> logout
-                        .logoutSuccessHandler(oidcLogoutSuccessHandler(clientRegistrationRepository))
+                        .logoutSuccessHandler(new KeycloakLogoutSuccessHandler(endSessionUri, clientId))
                 );
 
         return http.build();
-    }
-
-    /**
-     * Завершает сессию не только во фронте, но и на сервере авторизации (RP-Initiated Logout).
-     */
-    private OidcClientInitiatedLogoutSuccessHandler oidcLogoutSuccessHandler(ClientRegistrationRepository repository) {
-        OidcClientInitiatedLogoutSuccessHandler handler = new OidcClientInitiatedLogoutSuccessHandler(repository);
-        handler.setPostLogoutRedirectUri("{baseUrl}/");
-        return handler;
     }
 }

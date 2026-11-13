@@ -1,52 +1,37 @@
 package ru.practicum.transfer.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.transfer.client.AccountClient;
-import ru.practicum.transfer.client.NotificationClient;
 import ru.practicum.transfer.client.dto.AccountTransferResultDto;
 import ru.practicum.transfer.exception.RemoteServiceException;
-import ru.practicum.transfer.model.OperationStatus;
-import ru.practicum.transfer.model.Transfer;
-import ru.practicum.transfer.repository.TransferRepository;
+import ru.practicum.transfer.exception.SelfTransferException;
 import ru.practicum.transfer.web.dto.TransferResultDto;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class TransferService {
     private final AccountClient accountClient;
-    private final NotificationClient notificationClient;
-    private final TransferRepository transferRepository;
+    private final TransferRecorder recorder;
 
     public TransferResultDto transfer(String fromLogin, String toLogin, BigDecimal amount) {
         if (fromLogin.equals(toLogin)) {
-            throw reject(fromLogin, toLogin, amount,
-                    new RemoteServiceException(HttpStatus.BAD_REQUEST, List.of("Нельзя перевести деньги на свой же счёт")));
+            SelfTransferException e = new SelfTransferException();
+            recorder.recordRejection(fromLogin, toLogin, amount, e.getMessage());
+            throw e;
         }
 
         AccountTransferResultDto result;
         try {
             result = accountClient.transfer(fromLogin, toLogin, amount);
         } catch (RemoteServiceException e) {
-            throw reject(fromLogin, toLogin, amount, e);
+            recorder.recordRejection(fromLogin, toLogin, amount, e.getMessage());
+            throw e;
         }
 
-        transferRepository.save(new Transfer(fromLogin, toLogin, amount, OperationStatus.SUCCESS, null));
-
-        String sum = amount.toPlainString();
-        notificationClient.notify(fromLogin, "Переведено %s руб. клиенту %s. Баланс: %s руб."
-                .formatted(sum, result.toName(), result.fromBalance().toPlainString()));
-        notificationClient.notify(toLogin, "Получен перевод %s руб. от клиента %s".formatted(sum, fromLogin));
-
+        recorder.recordSuccess(fromLogin, toLogin, result.toName(), amount, result.fromBalance());
         return new TransferResultDto(fromLogin, toLogin, result.toName(), amount, result.fromBalance());
-    }
-
-    private RemoteServiceException reject(String fromLogin, String toLogin, BigDecimal amount, RemoteServiceException e) {
-        transferRepository.save(new Transfer(fromLogin, toLogin, amount, OperationStatus.REJECTED, e.getMessage()));
-        return e;
     }
 }

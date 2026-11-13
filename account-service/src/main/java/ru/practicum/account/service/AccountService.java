@@ -6,7 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.account.exception.AccountNotFoundException;
 import ru.practicum.account.exception.InsufficientFundsException;
 import ru.practicum.account.model.Account;
+import ru.practicum.account.model.OutboxNotification;
 import ru.practicum.account.repository.AccountRepository;
+import ru.practicum.account.repository.OutboxNotificationRepository;
 import ru.practicum.account.web.dto.AccountDto;
 import ru.practicum.account.web.dto.AccountShortDto;
 import ru.practicum.account.web.dto.BalanceDto;
@@ -20,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccountService {
     private final AccountRepository accountRepository;
+    private final OutboxNotificationRepository outboxRepository;
 
     /**
      * Аккаунт связывается с пользователем Keycloak по логину и создаётся при первом обращении.
@@ -32,11 +35,12 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountDto update(String login, String name, LocalDate birthdate) {
+    public AccountDto update(String login, String defaultName, String name, LocalDate birthdate) {
         Account account = accountRepository.findByLoginForUpdate(login)
-                .orElseThrow(() -> new AccountNotFoundException(login));
+                .orElseGet(() -> accountRepository.save(new Account(login, defaultName)));
         account.setName(name.trim());
         account.setBirthdate(birthdate);
+        outboxRepository.save(new OutboxNotification(login, "Данные аккаунта обновлены"));
         return toDto(account);
     }
 
