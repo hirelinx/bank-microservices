@@ -1,0 +1,73 @@
+# Общие настройки всех приложений банка.
+# Загружается в Consul KV по ключу config/application/data (см. consul-kv-initializer в docker-compose.yaml).
+# Значения ${...:default} позволяют одной и той же конфигурации работать и локально, и в Docker.
+
+bank:
+  keycloak:
+    # Адрес, под которым Keycloak виден браузеру; он же попадает в claim iss
+    public-url: ${KEYCLOAK_PUBLIC_URL:http://localhost:8180}
+    # Адрес для запросов приложений к Keycloak (в Docker — по имени контейнера)
+    internal-url: ${KEYCLOAK_INTERNAL_URL:http://localhost:8180}
+    realm: bank-realm
+  datasource:
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    database: ${DB_NAME:postgres}
+  services:
+    gateway-url: http://bank-gateway
+    account-url: http://account-service
+    notification-url: http://notification-service
+  outbox:
+    publish-delay: 5s
+    batch-size: 50
+  ping:
+    max-attempts: 10
+    initial-interval: 2s
+
+spring:
+  datasource:
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${bank.keycloak.public-url}/realms/${bank.keycloak.realm}
+          jwk-set-uri: ${bank.keycloak.internal-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/certs
+      client:
+        provider:
+          keycloak:
+            authorization-uri: ${bank.keycloak.public-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/auth
+            token-uri: ${bank.keycloak.internal-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/token
+            jwk-set-uri: ${bank.keycloak.internal-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/certs
+            user-info-uri: ${bank.keycloak.internal-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/userinfo
+            user-name-attribute: preferred_username
+
+  cloud:
+    consul:
+      discovery:
+        prefer-ip-address: true
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+    circuitbreaker:
+      resilience4j:
+        # Таймауты задаются на HTTP-клиенте; без TimeLimiter вызов остаётся в потоке запроса
+        disable-time-limiter: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO

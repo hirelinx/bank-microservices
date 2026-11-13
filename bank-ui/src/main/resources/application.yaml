@@ -5,16 +5,18 @@ spring:
   application:
     name: bank-ui
 
+  # Общие настройки (Keycloak, адрес Gateway) — в Consul KV: config/application/data
   config:
     import: "optional:consul:"
 
   cloud:
     consul:
-      host: localhost          # Адрес Consul (по умолчанию localhost)
-      port: 8500               # Порт Consul (8500 по умолчанию)
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
       config:
-        enabled: true            # Включаем Consul Config для внешней конфигурации
-        defaultContext: application  # Контекст по умолчанию
+        enabled: true
+        format: YAML
+        default-context: application
         prefixes:
           - config
 
@@ -23,26 +25,9 @@ spring:
       client:
         registration:
           keycloak:
+            provider: keycloak
             client-id: bank-ui
             client-secret: PAydhyWTVsJTzcfkfjTfFzpLcRMkwxdZ
             authorization-grant-type: authorization_code
             scope: openid, profile
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            provider: keycloak
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8180/realms/bank-realm
-
-bank:
-  gateway:
-    base-url: http://bank-gateway:8100
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-logging:
-  level:
-    root: INFO

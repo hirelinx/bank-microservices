@@ -5,24 +5,18 @@ spring:
   application:
     name: bank-gateway
 
+  # Общие настройки (Keycloak) — в Consul KV: config/application/data
   config:
     import: "optional:consul:"
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8180/realms/bank-realm
-
   cloud:
     consul:
-      host: localhost          # Адрес Consul (по умолчанию localhost)
-      port: 8500               # Порт Consul (8500 по умолчанию)
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
       config:
-        watch:
-          wait-time: 5
-        enabled: true            # Включаем Consul Config для внешней конфигурации
-        defaultContext: application  # Контекст по умолчанию
+        enabled: true
+        format: YAML
+        default-context: application
         prefixes:
           - config
 
@@ -31,33 +25,24 @@ spring:
         webflux:
           routes:
             - id: account-service
-              uri: lb://account-service:8200
+              uri: lb://account-service
               predicates:
                 - Path=/account/**
               filters:
                 - name: JwtTokenRelay
             - id: cash-service
-              uri: lb://cash-service:8210
+              uri: lb://cash-service
               predicates:
                 - Path=/cash/**
               filters:
                 - name: JwtTokenRelay
             - id: transfer-service
-              uri: lb://transfer-service:8230
+              uri: lb://transfer-service
               predicates:
                 - Path=/transfer/**
               filters:
                 - name: JwtTokenRelay
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
 logging:
   level:
-    root: INFO
-    ru.practicum.bank.gateway: DEBUG
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.cloud.gateway: INFO

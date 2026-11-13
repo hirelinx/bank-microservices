@@ -5,28 +5,25 @@ spring:
   application:
     name: transfer-service
 
+  # Общие настройки (БД, Keycloak, адреса сервисов) — в Consul KV: config/application/data
   config:
     import: "optional:consul:"
 
   cloud:
     consul:
-      host: localhost          # Адрес Consul (по умолчанию localhost)
-      port: 8500               # Порт Consul (8500 по умолчанию)
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
       config:
-        enabled: true            # Включаем Consul Config для внешней конфигурации
-        defaultContext: application  # Контекст по умолчанию
+        enabled: true
+        format: YAML
+        default-context: application
         prefixes:
           - config
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=transfer
-    username: postgres
-    password: password
+    url: jdbc:postgresql://${bank.datasource.host}:${bank.datasource.port}/${bank.datasource.database}?currentSchema=transfer
 
   jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
     properties:
       hibernate:
         default_schema: transfer
@@ -37,9 +34,6 @@ spring:
 
   security:
     oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8180/realms/bank-realm
       client:
         registration:
           keycloak:
@@ -47,24 +41,3 @@ spring:
             client-id: transfer-service
             client-secret: JcsVjVYLeY2ZgDMQb63xxQDnL92pxE8A
             authorization-grant-type: client_credentials
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8180/realms/bank-realm
-
-
-bank:
-  notification:
-    base-url: http://notification-service:8220
-  account:
-    base-url: http://account-service:8200
-
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-logging:
-  level:
-    root: INFO

@@ -31,15 +31,13 @@ services:
     depends_on:
       - consul
     volumes:
-      - ./consul/kv/init.json:/tmp/consul_kv.json:ro
+      - ./consul/kv:/kv:ro
     entrypoint: [ "sh", "-c" ]
     command: >
       "
       echo 'Waiting for Consul to be ready...' &&
-      while ! consul kv put -http-addr=http://consul-server:8500 test_connection success >/dev/null 2>&1; do sleep 1; done &&
-      echo 'Consul is up! Importing Key-Value pairs...' &&
-      consul kv import -http-addr=http://consul-server:8500 @/tmp/consul_kv.json &&
-      echo 'KV import completed successfully!'"
+      until consul kv put -http-addr=http://consul-server:8500 config/application/data @/kv/application.yaml; do sleep 1; done &&
+      echo 'Shared configuration loaded into Consul KV'"
 
   postgres-db:
     image: postgres:15
