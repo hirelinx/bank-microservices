@@ -18,6 +18,23 @@ spring:
         prefixes:
           - config
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=cash
+    username: postgres
+    password: password
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: cash
+
+  flyway:
+    schemas: cash
+    default-schema: cash
+
   security:
     oauth2:
       resourceserver:
