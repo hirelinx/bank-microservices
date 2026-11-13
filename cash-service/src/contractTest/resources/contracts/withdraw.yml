@@ -1,0 +1,23 @@
+description: Пользователь снимает деньги со своего счёта через Gateway
+name: withdraw
+request:
+  method: POST
+  url: /cash/withdraw
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer user-token
+  body:
+    amount: 100
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    login: ivanov
+    action: WITHDRAW
+    amount: 100
+    balance: 900.00
