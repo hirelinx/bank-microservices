@@ -1,0 +1,43 @@
+server:
+  port: 8200
+
+spring:
+  application:
+    name: account-service
+
+  # Общие настройки (БД, Keycloak, адреса сервисов) — в Consul KV: config/application/data
+  config:
+    import: "optional:consul:"
+
+  cloud:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      config:
+        enabled: true
+        format: YAML
+        default-context: application
+        prefixes:
+          - config
+
+  datasource:
+    url: jdbc:postgresql://${bank.datasource.host}:${bank.datasource.port}/${bank.datasource.database}?currentSchema=account
+
+  jpa:
+    properties:
+      hibernate:
+        default_schema: account
+
+  flyway:
+    schemas: account
+    default-schema: account
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: account-service
+            client-secret: Am77Jy9baHFrIIY29gY0Ff5r8nofw723
+            authorization-grant-type: client_credentials

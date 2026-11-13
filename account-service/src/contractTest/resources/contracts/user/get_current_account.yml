@@ -1,0 +1,20 @@
+description: Пользователь получает данные своего аккаунта, логин берётся из JWT
+name: get_current_account
+request:
+  method: GET
+  url: /account/me
+  headers:
+    Authorization: Bearer user-token
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    login: ivanov
+    name: Иванов Иван
+    birthdate: "2001-01-01"
+    balance: 1000.00

@@ -1,0 +1,33 @@
+server:
+  port: 8220
+
+spring:
+  application:
+    name: notification-service
+
+  # Общие настройки (БД, Keycloak) — в Consul KV: config/application/data
+  config:
+    import: "optional:consul:"
+
+  cloud:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      config:
+        enabled: true
+        format: YAML
+        default-context: application
+        prefixes:
+          - config
+
+  datasource:
+    url: jdbc:postgresql://${bank.datasource.host}:${bank.datasource.port}/${bank.datasource.database}?currentSchema=notification
+
+  jpa:
+    properties:
+      hibernate:
+        default_schema: notification
+
+  flyway:
+    schemas: notification
+    default-schema: notification

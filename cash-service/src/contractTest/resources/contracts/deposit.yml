@@ -1,0 +1,23 @@
+description: Пользователь пополняет свой счёт через Gateway
+name: deposit
+request:
+  method: POST
+  url: /cash/deposit
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer user-token
+  body:
+    amount: 100
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    login: ivanov
+    action: DEPOSIT
+    amount: 100
+    balance: 1100.00
