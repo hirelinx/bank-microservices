@@ -45,7 +45,7 @@ spring:
             authorization-uri: ${bank.keycloak.public-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/auth
             token-uri: ${bank.keycloak.internal-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/token
             jwk-set-uri: ${bank.keycloak.internal-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/certs
-            user-info-uri: ${bank.keycloak.internal-url}/realms/${bank.keycloak.realm}/protocol/openid-connect/userinfo
+            # user-info-uri не задан: логин и ФИО берутся из ID token
             user-name-attribute: preferred_username
 
   cloud:

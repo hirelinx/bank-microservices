@@ -17,5 +17,4 @@ spring:
             authorization-uri: ${bank.keycloak.public-url}/realms/bank-realm/protocol/openid-connect/auth
             token-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/token
             jwk-set-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/certs
-            user-info-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/userinfo
             user-name-attribute: preferred_username
