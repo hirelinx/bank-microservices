@@ -2,12 +2,13 @@ plugins {
     id("java")
     id("org.springframework.boot") version "4.2.0-RC1" apply false
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.springframework.cloud.contract") version "5.0.3" apply false
 }
 
-group = "ru.practicum"
-version = "1.0-SNAPSHOT"
-
 allprojects {
+    group = "ru.practicum"
+    version = "1.0-SNAPSHOT"
+
     repositories {
         mavenCentral()
     }
@@ -19,9 +20,12 @@ subprojects {
     apply(plugin = "io.spring.dependency-management")
 
     extra["springCloudVersion"] = "2026.0.0-RC1"
+    // Spring Cloud Contract не входит в release train 2026.0, версия подключается отдельно
+    extra["springCloudContractVersion"] = "5.0.3"
     dependencyManagement {
         imports {
             mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+            mavenBom("org.springframework.cloud:spring-cloud-contract-dependencies:${property("springCloudContractVersion")}")
         }
     }
 
@@ -49,7 +53,7 @@ subprojects {
         }
     }
 
-    tasks.test {
+    tasks.withType<Test> {
         useJUnitPlatform()
     }
 }
