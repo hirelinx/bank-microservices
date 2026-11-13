@@ -14,6 +14,8 @@ import ru.practicum.transfer.exception.RemoteServiceException;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Component
@@ -46,11 +48,18 @@ public class AccountClient {
                 throw e;
             }
         }, throwable -> {
-            if (throwable instanceof RemoteOperationRejectedException rejected) {
+            Throwable cause = unwrap(throwable);
+            if (cause instanceof RemoteOperationRejectedException rejected) {
                 throw rejected;
             }
-            log.warn("Ошибка вызова account-service: {}", throwable.toString());
+            log.warn("Ошибка вызова account-service: {}", cause.toString());
             throw RemoteServiceException.unavailable("аккаунтов");
         });
+    }
+
+    // Circuit Breaker выполняет вызов через executor и передаёт в fallback обёрнутое исключение
+    private static Throwable unwrap(Throwable throwable) {
+        boolean wrapped = throwable instanceof ExecutionException || throwable instanceof CompletionException;
+        return wrapped && throwable.getCause() != null ? throwable.getCause() : throwable;
     }
 }
