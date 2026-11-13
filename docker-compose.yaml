@@ -68,9 +68,10 @@ services:
       KC_HEALTH_ENABLED: "true" # Обязательно для работы health-check url (/health/ready)
     volumes:
       - keycloak_data:/opt/keycloak/data
+      - ./keycloak/realms:/opt/keycloak/data/import
     ports:
       - "8180:8080"
-    command: start-dev
+    command: start-dev --import-realm # импорт keycloak/realms/*.json, если realm ещё не существует
     depends_on:
       - postgres-db
 
