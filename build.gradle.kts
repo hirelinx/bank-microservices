@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
     id("java")
     id("org.springframework.boot") version "4.2.0-RC1" apply false
@@ -55,5 +57,10 @@ subprojects {
 
     tasks.withType<Test> {
         useJUnitPlatform()
+    }
+
+    // Фиксированное имя executable JAR для Dockerfile
+    tasks.named<BootJar>("bootJar") {
+        archiveFileName.set("${project.name}.jar")
     }
 }
