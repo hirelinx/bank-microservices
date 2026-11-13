@@ -31,7 +31,10 @@ subprojects {
         implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
         implementation("org.springframework.cloud:spring-cloud-starter-consul-config")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
+        testImplementation("org.springframework.boot:spring-boot-starter-security-test")
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+        testCompileOnly("org.projectlombok:lombok:1.18.36")
+        testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
 
         compileOnly("org.projectlombok:lombok:1.18.36")
         annotationProcessor("org.projectlombok:lombok:1.18.36")
