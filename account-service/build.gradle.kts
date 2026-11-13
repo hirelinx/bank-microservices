@@ -1,3 +1,10 @@
+import org.springframework.cloud.contract.verifier.config.TestFramework
+import org.springframework.cloud.contract.verifier.config.TestMode
+
+plugins {
+    id("org.springframework.cloud.contract")
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -16,4 +23,21 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.springframework.cloud:spring-cloud-starter-contract-stub-runner")
     testImplementation(project(path = ":notification-service", configuration = "contractStubs"))
+
+    contractTestImplementation("org.springframework.cloud:spring-cloud-starter-contract-verifier")
+}
+
+contracts {
+    testFramework.set(TestFramework.JUNIT5)
+    testMode.set(TestMode.MOCKMVC)
+    baseClassForTests.set("ru.practicum.account.contract.ContractVerifierBase")
+}
+
+// Stub-ы для consumer-тестов других модулей (Stub Runner в режиме classpath)
+val contractStubs by configurations.creating {
+    isCanBeConsumed = true
+    isCanBeResolved = false
+}
+artifacts {
+    add(contractStubs.name, tasks.named("verifierStubsJar"))
 }

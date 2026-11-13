@@ -1,0 +1,21 @@
+description: Снятие суммы больше баланса отклоняется
+name: withdraw_insufficient_funds
+request:
+  method: POST
+  url: /account/internal/ivanov/withdraw
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer service-token
+  body:
+    amount: 100000
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 409
+  headers:
+    Content-Type: application/problem+json
+  body:
+    errors:
+      - Недостаточно средств на счету
