@@ -1,0 +1,43 @@
+server:
+  port: 8210
+
+spring:
+  application:
+    name: cash-service
+
+  # Общие настройки (БД, Keycloak, адреса сервисов) — в Consul KV: config/application/data
+  config:
+    import: "optional:consul:"
+
+  cloud:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      config:
+        enabled: true
+        format: YAML
+        default-context: application
+        prefixes:
+          - config
+
+  datasource:
+    url: jdbc:postgresql://${bank.datasource.host}:${bank.datasource.port}/${bank.datasource.database}?currentSchema=cash
+
+  jpa:
+    properties:
+      hibernate:
+        default_schema: cash
+
+  flyway:
+    schemas: cash
+    default-schema: cash
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: cash-service
+            client-secret: fSVOW8SqFTUHLemVMAM7Vad7IBgrQ8si
+            authorization-grant-type: client_credentials

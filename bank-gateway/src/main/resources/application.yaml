@@ -1,0 +1,48 @@
+server:
+  port: 8100
+
+spring:
+  application:
+    name: bank-gateway
+
+  # Общие настройки (Keycloak) — в Consul KV: config/application/data
+  config:
+    import: "optional:consul:"
+
+  cloud:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      config:
+        enabled: true
+        format: YAML
+        default-context: application
+        prefixes:
+          - config
+
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: account-service
+              uri: lb://account-service
+              predicates:
+                - Path=/account/**
+              filters:
+                - name: JwtTokenRelay
+            - id: cash-service
+              uri: lb://cash-service
+              predicates:
+                - Path=/cash/**
+              filters:
+                - name: JwtTokenRelay
+            - id: transfer-service
+              uri: lb://transfer-service
+              predicates:
+                - Path=/transfer/**
+              filters:
+                - name: JwtTokenRelay
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

@@ -1,0 +1,12 @@
+bank:
+  keycloak:
+    public-url: http://localhost:65535
+    internal-url: http://localhost:65535
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${bank.keycloak.public-url}/realms/bank-realm
+          jwk-set-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/certs

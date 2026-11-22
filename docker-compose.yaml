@@ -1,0 +1,167 @@
+# Инфраструктура:          docker compose up -d
+# Инфраструктура + банк:    ./gradlew bootJar && docker compose --profile apps up -d --build
+
+x-bank-app: &bank-app
+  profiles: [ apps ]
+  restart: on-failure
+  environment:
+    CONSUL_HOST: consul-server
+    DB_HOST: postgres-db
+    KEYCLOAK_PUBLIC_URL: http://localhost:8180
+    KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+  depends_on:
+    consul-kv-initializer:
+      condition: service_completed_successfully
+    postgres-db:
+      condition: service_healthy
+    keycloak:
+      condition: service_healthy
+
+services:
+  consul:
+    image: hashicorp/consul:1.15
+    container_name: consul-server
+    restart: always
+    volumes:
+      - consul_data:/consul/data
+      - ./consul/config.json:/consul/config/config.json:ro
+    ports:
+      - "8500:8500"       # Web UI и HTTP API
+      - "8600:8600/tcp"   # DNS-сервер (TCP)
+      - "8600:8600/udp"   # DNS-сервер (UDP)
+      - "8300:8300"       # Server RPC (для связи между агентами)
+      - "8301:8301/tcp"   # Serf LAN (Gossip протокол, TCP)
+      - "8301:8301/udp"   # Serf LAN (Gossip протокол, UDP)
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    command: >
+      consul agent -server
+      -bootstrap-expect=1
+      -ui
+      -client=0.0.0.0
+      -node=consul-server-01
+      -datacenter=dc1
+      -data-dir=/consul/data
+      -config-dir=/consul/config
+    healthcheck:
+      test: [ "CMD", "consul", "members" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Загружает общие настройки приложений (Externalized Config) в Consul KV
+  consul-kv-initializer:
+    image: hashicorp/consul:1.15
+    container_name: consul-kv-init
+    depends_on:
+      consul:
+        condition: service_healthy
+    volumes:
+      - ./consul/kv:/kv:ro
+    entrypoint: [ "sh", "-c" ]
+    command: >
+      "
+      until consul kv put -http-addr=http://consul-server:8500 config/application/data @/kv/application.yaml; do sleep 1; done &&
+      echo 'Shared configuration loaded into Consul KV'"
+
+  # Одна БД для всех сервисов, у каждого своя схема (Database per Service на уровне схем)
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0
+    container_name: keycloak
+    restart: always
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-db:5432/postgres
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      # Один issuer для браузера и для контейнеров, которые обращаются к Keycloak по адресу keycloak:8080
+      KC_HOSTNAME_URL: http://localhost:8180
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak/realms:/opt/keycloak/data/import
+    ports:
+      - "8180:8080"
+    command: start-dev --import-realm # импорт keycloak/realms/*.json, если realm ещё не существует
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"UP\"' <&3" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  notification-service:
+    <<: *bank-app
+    build: ./notification-service
+    image: bank/notification-service:1.0-SNAPSHOT
+    container_name: notification-service
+    ports:
+      - "8220:8220"
+
+  account-service:
+    <<: *bank-app
+    build: ./account-service
+    image: bank/account-service:1.0-SNAPSHOT
+    container_name: account-service
+    ports:
+      - "8200:8200"
+
+  cash-service:
+    <<: *bank-app
+    build: ./cash-service
+    image: bank/cash-service:1.0-SNAPSHOT
+    container_name: cash-service
+    ports:
+      - "8210:8210"
+
+  transfer-service:
+    <<: *bank-app
+    build: ./transfer-service
+    image: bank/transfer-service:1.0-SNAPSHOT
+    container_name: transfer-service
+    ports:
+      - "8230:8230"
+
+  bank-gateway:
+    <<: *bank-app
+    build: ./bank-gateway
+    image: bank/bank-gateway:1.0-SNAPSHOT
+    container_name: bank-gateway
+    ports:
+      - "8100:8100"
+
+  bank-ui:
+    <<: *bank-app
+    build: ./bank-ui
+    image: bank/bank-ui:1.0-SNAPSHOT
+    container_name: bank-ui
+    ports:
+      - "8080:8080"
+
+volumes:
+  consul_data:
+  postgres_data:
+  keycloak_data:

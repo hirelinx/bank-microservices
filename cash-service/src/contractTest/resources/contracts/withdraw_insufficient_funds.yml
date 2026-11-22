@@ -1,0 +1,21 @@
+description: Снятие суммы больше баланса возвращает ошибку для показа пользователю
+name: withdraw_insufficient_funds
+request:
+  method: POST
+  url: /cash/withdraw
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer user-token
+  body:
+    amount: 100000
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 409
+  headers:
+    Content-Type: application/problem+json
+  body:
+    errors:
+      - Недостаточно средств на счету

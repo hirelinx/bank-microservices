@@ -1,0 +1,20 @@
+description: Пользователь получает логины и имена других аккаунтов для перевода (без сумм на счетах)
+name: get_other_accounts
+request:
+  method: GET
+  url: /account/others
+  headers:
+    Authorization: Bearer user-token
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    - login: petrov
+      name: Петров Петр
+    - login: sidorov
+      name: Сидоров Сидор

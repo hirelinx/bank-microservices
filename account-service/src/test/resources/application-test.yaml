@@ -1,0 +1,36 @@
+bank:
+  keycloak:
+    public-url: http://localhost:65535
+    internal-url: http://localhost:65535
+    realm: bank-realm
+  datasource:
+    host: localhost
+    port: 5432
+    database: postgres
+  services:
+    notification-url: http://notification-service
+  outbox:
+    # Публикатор вызывается в тестах явно
+    publish-delay: PT1H
+  ping:
+    max-attempts: 1
+
+spring:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${bank.keycloak.public-url}/realms/bank-realm
+          jwk-set-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/certs
+      client:
+        provider:
+          keycloak:
+            token-uri: ${bank.keycloak.internal-url}/realms/bank-realm/protocol/openid-connect/token
+  cloud:
+    circuitbreaker:
+      resilience4j:
+        disable-time-limiter: true

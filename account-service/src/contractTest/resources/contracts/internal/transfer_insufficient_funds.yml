@@ -1,0 +1,23 @@
+description: Перевод суммы больше баланса отправителя отклоняется
+name: transfer_insufficient_funds
+request:
+  method: POST
+  url: /account/internal/transfer
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer service-token
+  body:
+    fromLogin: ivanov
+    toLogin: petrov
+    amount: 100000
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 409
+  headers:
+    Content-Type: application/problem+json
+  body:
+    errors:
+      - Недостаточно средств на счету

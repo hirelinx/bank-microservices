@@ -1,0 +1,22 @@
+description: Аккаунт нельзя сохранить, если пользователю меньше 18 лет
+name: update_current_account_underage
+request:
+  method: PUT
+  url: /account/me
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer user-token
+  body:
+    name: Иванов Иван
+    birthdate: "2020-01-01"
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 400
+  headers:
+    Content-Type: application/problem+json
+  body:
+    errors:
+      - Возраст должен быть старше 18 лет

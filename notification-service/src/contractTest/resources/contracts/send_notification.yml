@@ -1,0 +1,24 @@
+description: Микросервис с сервисным токеном отправляет уведомление пользователю
+name: send_notification
+request:
+  method: POST
+  url: /notifications
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer service-token
+  body:
+    login: ivanov
+    message: "Счёт пополнен на 100 руб. Баланс: 1100.00 руб."
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+    body:
+      - path: $.login
+        type: by_regex
+        value: ".+"
+      - path: $.message
+        type: by_regex
+        value: ".+"
+response:
+  status: 202

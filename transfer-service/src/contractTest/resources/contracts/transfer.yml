@@ -1,0 +1,25 @@
+description: Пользователь переводит деньги на счёт другого аккаунта через Gateway
+name: transfer
+request:
+  method: POST
+  url: /transfer
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer user-token
+  body:
+    toLogin: petrov
+    amount: 100
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    fromLogin: ivanov
+    toLogin: petrov
+    toName: Петров Петр
+    amount: 100
+    balance: 900.00

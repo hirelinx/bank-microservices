@@ -1,0 +1,24 @@
+description: Пользователь изменяет фамилию, имя и дату рождения своего аккаунта
+name: update_current_account
+request:
+  method: PUT
+  url: /account/me
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer user-token
+  body:
+    name: Иванов Иван
+    birthdate: "2001-01-01"
+  matchers:
+    headers:
+      - key: Authorization
+        regex: "Bearer .+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    login: ivanov
+    name: Иванов Иван
+    birthdate: "2001-01-01"
+    balance: 1000.00

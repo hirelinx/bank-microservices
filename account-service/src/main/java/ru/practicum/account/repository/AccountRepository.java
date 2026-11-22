@@ -1,0 +1,21 @@
+package ru.practicum.account.repository;
+
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import ru.practicum.account.model.Account;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface AccountRepository extends JpaRepository<Account, Long> {
+    Optional<Account> findByLogin(String login);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Account a where a.login = :login")
+    Optional<Account> findByLoginForUpdate(@Param("login") String login);
+
+    List<Account> findAllByLoginNotOrderByNameAsc(String login);
+}
